@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 import requests
 import hashlib
 
+# Vercel entry point
 app = FastAPI()
 
 U1 = "https://100067.connect.garena.com/game/account_security/bind:get_bind_info"
@@ -31,13 +32,12 @@ def hs(s: str):
 
 @app.get("/")
 async def root():
-    return {"status": "SUCCESS", "loc": "api/index.py"}
+    return {"status": "SUCCESS"}
 
 @app.get("/api/request")
 async def req(token: str, email: str, request: Request):
-    p = {"app_id": "100067", "access_token": token, "email": email, "locale": "en_PK", "region": "PK"}
-    r = requests.post(U2, data=p, headers=gh(request))
-    return r.json()
+    d = {"app_id": "100067", "access_token": token, "email": email, "locale": "en_PK", "region": "PK"}
+    return requests.post(U2, data=d, headers=gh(request)).json()
 
 @app.get("/api/confirm-new")
 async def b_new(token: str, email: str, otp: str, sc: str = "123456", request: Request):
@@ -45,9 +45,8 @@ async def b_new(token: str, email: str, otp: str, sc: str = "123456", request: R
     v = requests.post(U3, data={"app_id": "100067", "access_token": token, "email": email, "otp": otp}, headers=h).json()
     vt = v.get("verifier_token")
     if not vt: return {"status": "FAIL", "res": v}
-    p = {"app_id": "100067", "access_token": token, "verifier_token": vt, "email": email, "secondary_password": hs(sc)}
-    r = requests.post(U4, data=p, headers=h)
-    return r.json()
+    d = {"app_id": "100067", "access_token": token, "verifier_token": vt, "email": email, "secondary_password": hs(sc)}
+    return requests.post(U4, data=d, headers=h).json()
 
 @app.get("/api/rebind")
 async def b_re(token: str, email: str, otp: str, sc: str, request: Request):
@@ -56,9 +55,8 @@ async def b_re(token: str, email: str, otp: str, sc: str, request: Request):
     i = requests.post(U5, data={"app_id": "100067", "access_token": token, "secondary_password": hs(sc)}, headers=h).json()
     vt, it = v.get("verifier_token"), i.get("identity_token")
     if not vt or not it: return {"status": "FAIL", "v": v, "i": i}
-    p = {"app_id": "100067", "access_token": token, "identity_token": it, "verifier_token": vt, "email": email}
-    r = requests.post(U6, data=p, headers=h)
-    return r.json()
+    d = {"app_id": "100067", "access_token": token, "identity_token": it, "verifier_token": vt, "email": email}
+    return requests.post(U6, data=d, headers=h).json()
 
 @app.get("/api/unbind")
 async def ub(token: str, sc: str, request: Request):
@@ -79,8 +77,8 @@ async def info(token: str, request: Request):
 @app.get("/api/friends")
 async def fr(token: str, mode: str, target: str = None, request: Request):
     h = gh(request)
-    m_map = {"list": U12, "add": U13, "remove": U14, "accept": U15, "decline": U16}
-    u = m_map.get(mode)
+    u_m = {"list": U12, "add": U13, "remove": U14, "accept": U15, "decline": U16}
+    u = u_m.get(mode)
     p = {"access_token": token}
     if target: p["target_account_id"] = target
     return requests.get(u, params=p, headers=h).json()
